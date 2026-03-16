@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Vocab Pro">
+<meta name="theme-color" content="#5865F2">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<title>Vocab Pro</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --indigo:#5865F2;--indigo-dark:#4752C4;--indigo-light:#EEF0FD;
+  --green:#2DC653;--green-light:#E8F9ED;--green-dark:#1a8a35;
+  --red:#E53E3E;--red-light:#FFF5F5;
+  --orange:#F6820D;--orange-light:#FFF8F0;
+  --yellow:#F6C90E;--yellow-light:#FFFDE7;
+  --bg:#F7F8FC;--white:#FFFFFF;
+  --text:#1A1D2E;--text2:#5A6072;--text3:#9BA3B8;
+  --border:#E2E5F0;--border2:#C8CEDE;
+  --shadow:0 1px 3px rgba(0,0,0,.08),0 4px 12px rgba(0,0,0,.06);
+  --shadow-lg:0 4px 16px rgba(0,0,0,.12);
+  --r:14px;--r-sm:10px;--r-xs:7px;
+  --safe-top:env(safe-area-inset-top,0px);
+  --safe-bot:env(safe-area-inset-bottom,0px);
+}
+html,body{height:100%;background:var(--bg);overflow:hidden;}
+body{font-family:'Inter',system-ui,sans-serif;color:var(--text);-webkit-font-smoothing:antialiased;}
+#app{height:100dvh;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  padding:calc(var(--safe-top)+12px) 16px calc(32px + var(--safe-bot));}
+
+/* ── SCREENS ── */
+.screen{display:none;}
+.screen.active{display:block;animation:su .28s ease;}
+@keyframes su{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+
+/* ── CARDS ── */
+.card{background:var(--white);border-radius:var(--r);box-shadow:var(--shadow);padding:16px;}
+
+/* ── HOME ── */
+.home-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding-top:4px;}
+.brand{font-size:22px;font-weight:800;color:var(--indigo);letter-spacing:-.5px;}
+.brand span{color:var(--text);}
+.streak-pill{display:flex;align-items:center;gap:5px;background:var(--orange-light);border:1px solid rgba(246,130,13,.25);
+  border-radius:20px;padding:5px 12px;font-size:13px;font-weight:600;color:var(--orange);}
+
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;}
+.stat-box{background:var(--white);border-radius:var(--r-sm);box-shadow:var(--shadow);padding:12px 10px;text-align:center;}
+.stat-box .n{font-size:22px;font-weight:800;color:var(--indigo);}
+.stat-box .l{font-size:11px;font-weight:500;color:var(--text3);margin-top:2px;}
+
+.sec{margin-bottom:22px;}
+.sec-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.sec-title{font-size:13px;font-weight:700;color:var(--text2);letter-spacing:.04em;text-transform:uppercase;}
+.sec-action{font-size:13px;font-weight:600;color:var(--indigo);cursor:pointer;}
+
+.fiche-list{display:flex;flex-direction:column;gap:8px;}
+.fiche-item{background:var(--white);border:1.5px solid var(--border);border-radius:var(--r-sm);
+  padding:13px 14px;display:flex;align-items:center;gap:12px;cursor:pointer;
+  transition:border-color .15s,box-shadow .15s;-webkit-tap-highlight-color:transparent;}
+.fiche-item:active{transform:scale(.99);}
+.fiche-item.selected{border-color:var(--indigo);box-shadow:0 0 0 3px var(--indigo-light);}
+.fiche-dot{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+  font-size:16px;flex-shrink:0;}
+.fiche-info{flex:1;min-width:0;}
+.fiche-name{font-size:14px;font-weight:600;color:var(--text);}
+.fiche-meta{font-size:12px;color:var(--text3);margin-top:1px;}
+.fiche-prog{display:flex;flex-direction:column;align-items:flex-end;gap:3px;}
+.mini-track{width:50px;height:4px;background:var(--border);border-radius:2px;overflow:hidden;}
+.mini-fill{height:100%;border-radius:2px;transition:width .4s;}
+.mini-pct{font-size:11px;font-weight:600;color:var(--text3);}
+.del-btn{background:none;border:none;color:var(--text3);font-size:16px;padding:4px 6px;cursor:pointer;line-height:1;}
+
+.mode-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;}
+.mode-card{background:var(--white);border:1.5px solid var(--border);border-radius:var(--r-sm);
+  padding:12px 8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;
+  transition:all .15s;-webkit-tap-highlight-color:transparent;}
+.mode-card:active{transform:scale(.97);}
+.mode-card.sel{border-color:var(--indigo);background:var(--indigo-light);}
+.mode-card .mi{font-size:24px;}
+.mode-card .mt{font-size:12px;font-weight:600;color:var(--text2);}
+.mode-card.sel .mt{color:var(--indigo);}
+
+.btn-primary{width:100%;padding:15px;background:var(--indigo);color:#fff;border:none;border-radius:var(--r-sm);
+  font-size:16px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;letter-spacing:-.1px;
+  transition:background .15s;-webkit-tap-highlight-color:transparent;margin-bottom:10px;}
+.btn-primary:disabled{background:var(--border2);color:#fff;cursor:not-allowed;}
+.btn-primary:not(:disabled):active{background:var(--indigo-dark);}
+.btn-outline{width:100%;padding:13px;background:transparent;color:var(--indigo);
+  border:1.5px solid var(--indigo);border-radius:var(--r-sm);font-size:15px;font-weight:600;
+  cursor:pointer;font-family:'Inter',sans-serif;transition:all .15s;-webkit-tap-highlight-color:transparent;}
+.btn-outline:active{background:var(--indigo-light);}
+
+/* ── BANNER INSTALL ── */
+.install-banner{background:var(--indigo-light);border:1px solid rgba(88,101,242,.3);border-radius:var(--r-sm);
+  padding:12px 14px;margin-bottom:16px;display:none;}
+.install-banner.show{display:block;}
+.install-banner p{font-size:13px;color:var(--indigo-dark);line-height:1.5;}
+.install-banner strong{font-weight:700;}
+.install-banner button{margin-top:8px;padding:7px 14px;background:var(--indigo);color:#fff;
+  border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;}
+
+/* ── QUIZ HEADER ── */
+.quiz-top{display:flex;align-items:center;gap:12px;padding:12px 0 14px;}
+.back-btn{width:38px;height:38px;background:var(--white);border:1.5px solid var(--border);
+  border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:19px;cursor:pointer;flex-shrink:0;color:var(--text2);
+  -webkit-tap-highlight-color:transparent;box-shadow:var(--shadow);}
+.prog-wrap{flex:1;}
+.prog-track{height:7px;background:var(--border);border-radius:4px;overflow:hidden;}
+.prog-bar{height:100%;background:linear-gradient(90deg,var(--indigo),#A78BFA);border-radius:4px;transition:width .45s cubic-bezier(.4,0,.2,1);}
+.prog-lbl{font-size:11px;font-weight:600;color:var(--text3);margin-top:4px;text-align:right;}
+.hearts{display:flex;gap:3px;font-size:15px;}
+
+/* ── FLASHCARD ── */
+.card-scene{perspective:1200px;height:240px;cursor:pointer;margin-bottom:18px;-webkit-tap-highlight-color:transparent;}
+.card-body{width:100%;height:100%;transform-style:preserve-3d;transition:transform .52s cubic-bezier(.4,0,.2,1);}
+.card-body.flipped{transform:rotateY(180deg);}
+.card-side{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  border-radius:var(--r);display:flex;flex-direction:column;justify-content:center;align-items:center;padding:28px 22px;}
+.card-side.front{background:var(--white);box-shadow:var(--shadow-lg);border:1.5px solid var(--border);}
+.card-side.back{transform:rotateY(180deg);background:var(--indigo);box-shadow:var(--shadow-lg);}
+.c-tag{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;margin-bottom:12px;}
+.front .c-tag{color:var(--indigo);}
+.back .c-tag{color:rgba(255,255,255,.65);}
+.c-word{font-size:30px;font-weight:800;color:var(--text);text-align:center;line-height:1.2;letter-spacing:-.5px;}
+.c-def{font-size:16px;font-weight:500;color:#fff;text-align:center;line-height:1.6;}
+.c-hint{font-size:12px;color:var(--text3);margin-top:14px;font-weight:500;}
+
+.know-row{margin-top:6px;}
+.know-q{font-size:13px;font-weight:600;color:var(--text2);text-align:center;margin-bottom:10px;}
+.know-btns{display:flex;gap:10px;}
+.know-btn{flex:1;padding:14px;border-radius:var(--r-sm);border:1.5px solid;cursor:pointer;
+  font-size:15px;font-weight:700;font-family:'Inter',sans-serif;transition:all .15s;
+  -webkit-tap-highlight-color:transparent;}
+.know-btn:active{transform:scale(.97);}
+.know-no{border-color:rgba(229,62,62,.4);background:var(--red-light);color:var(--red);}
+.know-yes{border-color:rgba(45,198,83,.4);background:var(--green-light);color:var(--green-dark);}
+
+/* ── MCQ ── */
+.q-label{font-size:11px;font-weight:700;color:var(--indigo);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px;}
+.q-box{background:var(--white);border-radius:var(--r);box-shadow:var(--shadow);padding:20px 16px;
+  margin-bottom:14px;min-height:100px;display:flex;align-items:center;justify-content:center;text-align:center;}
+.q-text{font-size:20px;font-weight:700;color:var(--text);line-height:1.4;letter-spacing:-.3px;}
+.opts{display:grid;gap:9px;}
+.opt{background:var(--white);border:1.5px solid var(--border);border-radius:var(--r-sm);
+  padding:14px 16px;cursor:pointer;font-size:14px;font-weight:500;color:var(--text);text-align:left;
+  font-family:'Inter',sans-serif;-webkit-tap-highlight-color:transparent;line-height:1.4;
+  transition:border-color .15s,background .15s;}
+.opt:active:not(:disabled){background:var(--indigo-light);border-color:var(--indigo);}
+.opt.right{background:var(--green-light);border-color:var(--green);color:var(--green-dark);}
+.opt.wrong{background:var(--red-light);border-color:var(--red);color:var(--red);}
+.opt:disabled{cursor:default;}
+
+/* ── TYPING ── */
+.type-in{width:100%;padding:14px 16px;border:1.5px solid var(--border2);border-radius:var(--r-sm);
+  font-size:17px;color:var(--text);background:var(--white);margin-bottom:10px;outline:none;
+  font-family:'Inter',sans-serif;-webkit-appearance:none;transition:border-color .2s;box-shadow:var(--shadow);}
+.type-in:focus{border-color:var(--indigo);box-shadow:0 0 0 3px var(--indigo-light);}
+.type-in.right{border-color:var(--green);background:var(--green-light);}
+.type-in.wrong{border-color:var(--red);background:var(--red-light);}
+.hint-line{font-size:13px;font-weight:500;color:var(--text3);margin-bottom:8px;min-height:20px;}
+
+/* ── SHARED QUIZ ── */
+.next-btn{width:100%;margin-top:12px;padding:15px;background:var(--indigo);color:#fff;border:none;
+  border-radius:var(--r-sm);font-size:16px;font-weight:700;cursor:pointer;display:none;
+  font-family:'Inter',sans-serif;-webkit-tap-highlight-color:transparent;}
+.next-btn.show{display:block;animation:su .2s ease;}
+.next-btn:active{background:var(--indigo-dark);}
+.fb{padding:12px 14px;border-radius:var(--r-sm);margin-top:10px;font-size:14px;font-weight:600;
+  display:none;line-height:1.5;border:1.5px solid;}
+.fb.ok{background:var(--green-light);color:var(--green-dark);border-color:rgba(45,198,83,.35);display:block;}
+.fb.ko{background:var(--red-light);color:var(--red);border-color:rgba(229,62,62,.3);display:block;}
+
+/* ── SPEED MODE ── */
+.speed-card{background:var(--white);border-radius:var(--r);box-shadow:var(--shadow-lg);
+  padding:28px 20px;text-align:center;min-height:200px;display:flex;flex-direction:column;
+  justify-content:center;align-items:center;margin-bottom:16px;border:2px solid var(--border);}
+.speed-word{font-size:32px;font-weight:800;color:var(--text);margin-bottom:10px;letter-spacing:-.5px;}
+.speed-timer{width:100%;height:5px;background:var(--border);border-radius:3px;margin-bottom:14px;overflow:hidden;}
+.speed-bar{height:100%;background:var(--indigo);border-radius:3px;transition:width .1s linear;}
+.speed-opts{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.speed-opt{padding:13px;border:1.5px solid var(--border);border-radius:var(--r-sm);background:var(--white);
+  cursor:pointer;font-size:13px;font-weight:600;color:var(--text);font-family:'Inter',sans-serif;
+  -webkit-tap-highlight-color:transparent;transition:all .15s;text-align:left;line-height:1.4;}
+.speed-opt:active:not(:disabled){transform:scale(.97);}
+.speed-opt.right{background:var(--green-light);border-color:var(--green);color:var(--green-dark);}
+.speed-opt.wrong{background:var(--red-light);border-color:var(--red);color:var(--red);}
+
+/* ── RESULTS ── */
+.res-hero{text-align:center;padding:20px 0 16px;}
+.res-emoji{font-size:64px;display:block;margin-bottom:12px;animation:bounce .5s cubic-bezier(.36,2,.3,1);}
+@keyframes bounce{from{transform:scale(0);}to{transform:scale(1);}}
+.res-title{font-size:26px;font-weight:800;color:var(--text);letter-spacing:-.5px;}
+.res-sub{font-size:14px;color:var(--text2);margin-top:4px;}
+
+.score-donut{width:120px;height:120px;margin:16px auto 20px;position:relative;display:flex;align-items:center;justify-content:center;}
+.score-donut svg{position:absolute;inset:0;transform:rotate(-90deg);}
+.donut-bg{fill:none;stroke:var(--border);stroke-width:10;}
+.donut-fg{fill:none;stroke:var(--indigo);stroke-width:10;stroke-linecap:round;transition:stroke-dashoffset .9s cubic-bezier(.4,0,.2,1);}
+.score-inner{text-align:center;}
+.score-n{font-size:26px;font-weight:800;color:var(--indigo);}
+.score-l{font-size:11px;font-weight:600;color:var(--text3);}
+
+.res-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;}
+.res-box{background:var(--white);border-radius:var(--r-sm);box-shadow:var(--shadow);padding:14px;text-align:center;}
+.res-box .n{font-size:22px;font-weight:800;color:var(--text);}
+.res-box .l{font-size:12px;font-weight:500;color:var(--text3);margin-top:2px;}
+
+/* ── GLOSSAIRE ── */
+.gloss-search{width:100%;padding:12px 16px;border:1.5px solid var(--border2);border-radius:var(--r-sm);
+  font-size:15px;color:var(--text);background:var(--white);outline:none;font-family:'Inter',sans-serif;
+  margin-bottom:12px;box-shadow:var(--shadow);}
+.gloss-search:focus{border-color:var(--indigo);}
+.gloss-list{display:flex;flex-direction:column;gap:6px;}
+.gloss-item{background:var(--white);border-radius:var(--r-sm);padding:12px 14px;box-shadow:var(--shadow);
+  border-left:3px solid var(--indigo);cursor:pointer;transition:box-shadow .15s;}
+.gloss-item:active{box-shadow:var(--shadow-lg);}
+.gloss-w{font-size:14px;font-weight:700;color:var(--text);}
+.gloss-d{font-size:13px;color:var(--text2);margin-top:3px;line-height:1.4;display:none;}
+.gloss-item.open .gloss-d{display:block;}
+.gloss-tag{font-size:10px;font-weight:700;color:var(--indigo);background:var(--indigo-light);
+  border-radius:4px;padding:1px 6px;margin-left:6px;}
+
+/* ── BOTTOM NAV ── */
+.bnav{display:flex;justify-content:space-around;background:var(--white);border-top:1px solid var(--border);
+  padding:8px 0 calc(8px + var(--safe-bot));position:sticky;bottom:0;margin:0 -16px;
+  box-shadow:0 -2px 10px rgba(0,0,0,.06);}
+.bnav-btn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 16px;
+  cursor:pointer;background:none;border:none;font-family:'Inter',sans-serif;
+  -webkit-tap-highlight-color:transparent;}
+.bnav-icon{font-size:20px;transition:transform .15s;}
+.bnav-lbl{font-size:10px;font-weight:600;color:var(--text3);}
+.bnav-btn.active .bnav-lbl{color:var(--indigo);}
+.bnav-btn.active .bnav-icon{transform:scale(1.1);}
+
+/* ── MODAL ── */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;
+  justify-content:flex-end;flex-direction:column;}
+.overlay.open{display:flex;animation:fadeIn .2s ease;}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+.sheet{background:var(--white);border-radius:20px 20px 0 0;padding:20px 18px calc(20px + var(--safe-bot));
+  animation:slideUp .28s cubic-bezier(.4,0,.2,1);}
+@keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
+.sheet-title{font-size:18px;font-weight:800;color:var(--text);margin-bottom:4px;letter-spacing:-.3px;}
+.sheet-sub{font-size:13px;color:var(--text2);margin-bottom:14px;line-height:1.5;}
+.sheet-input{width:100%;padding:12px 14px;border:1.5px solid var(--border2);border-radius:var(--r-sm);
+  font-size:14px;color:var(--text);background:var(--bg);font-family:'Inter',sans-serif;
+  outline:none;margin-bottom:8px;-webkit-appearance:none;}
+.sheet-input:focus{border-color:var(--indigo);}
+.sheet-ta{min-height:130px;resize:vertical;}
+.sheet-tip{font-size:11px;color:var(--text3);line-height:1.5;margin-bottom:10px;
+  background:var(--bg);border-radius:var(--r-xs);padding:8px 10px;}
+.sheet-row{display:flex;gap:8px;margin-top:4px;}
+.sheet-cancel{flex:1;padding:13px;background:var(--bg);color:var(--text2);border:none;
+  border-radius:var(--r-sm);font-size:14px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;}
+.sheet-ok{flex:2;padding:13px;background:var(--indigo);color:#fff;border:none;
+  border-radius:var(--r-sm);font-size:14px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ══ HOME ══ -->
+  <div id="screen-home" class="screen active">
+    <div class="home-top">
+      <div class="brand">Vocab<span>Pro</span></div>
+      <div class="streak-pill" id="streak-pill">🔥 <span id="streak-n">0</span> jours</div>
+    </div>
+
+    <div class="install-banner" id="install-banner">
+      <p id="install-msg"></p>
+      <button id="install-btn" style="display:none" onclick="doInstall()">Installer l'app</button>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-box"><div class="n" id="sn-total">0</div><div class="l">mots appris</div></div>
+      <div class="stat-box"><div class="n" id="sn-today">0</div><div class="l">today</div></div>
+      <div class="stat-box"><div class="n" id="sn-sessions">0</div><div class="l">sessions</div></div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-head">
+        <span class="sec-title">Fiches</span>
+        <span class="sec-action" onclick="openImport()">+ Importer</span>
+      </div>
+      <div class="fiche-list" id="fiche-list"></div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-head"><span class="sec-title">Mode</span></div>
+      <div class="mode-grid">
+        <div class="mode-card sel" onclick="selMode('flashcard',this)"><div class="mi">🃏</div><div class="mt">Flashcard</div></div>
+        <div class="mode-card" onclick="selMode('mcq',this)"><div class="mi">🎯</div><div class="mt">QCM</div></div>
+        <div class="mode-card" onclick="selMode('type',this)"><div class="mi">✍️</div><div class="mt">Écriture</div></div>
+        <div class="mode-card" onclick="selMode('speed',this)"><div class="mi">⚡</div><div class="mt">Vitesse</div></div>
+        <div class="mode-card" onclick="selMode('srs',this)"><div class="mi">🧠</div><div class="mt">Répétition</div></div>
+        <div class="mode-card" onclick="goGlossaire()"><div class="mi">📖</div><div class="mt">Glossaire</div></div>
+      </div>
+    </div>
+
+    <button class="btn-primary" id="btn-start" onclick="startQuiz()" disabled>Choisir une fiche</button>
+    <div style="height:60px"></div>
+  </div>
+
+  <!-- ══ QUIZ ══ -->
+  <div id="screen-quiz" class="screen">
+    <div class="quiz-top">
+      <button class="back-btn" onclick="showHome()">←</button>
+      <div class="prog-wrap">
+        <div class="prog-track"><div class="prog-bar" id="q-bar"></div></div>
+        <div class="prog-lbl" id="q-lbl">0 / 0</div>
+      </div>
+      <div class="hearts" id="q-hearts"></div>
+    </div>
+
+    <!-- Flashcard -->
+    <div id="mode-fc" style="display:none">
+      <div class="card-scene" id="card-scene" onclick="flipCard(event)">
+        <div class="card-body" id="card-body">
+          <div class="card-side front">
+            <div class="c-tag">mot</div>
+            <div class="c-word" id="fc-word"></div>
+            <div class="c-hint">Appuyer pour révéler</div>
+          </div>
+          <div class="card-side back">
+            <div class="c-tag">définition</div>
+            <div class="c-def" id="fc-def"></div>
+          </div>
+        </div>
+      </div>
+      <div id="know-zone" style="display:none">
+        <div class="know-q">Connaissiez-vous ce mot ?</div>
+        <div class="know-btns">
+          <button class="know-btn know-no" onclick="fcAns(false)">✗ &nbsp;Non</button>
+          <button class="know-btn know-yes" onclick="fcAns(true)">✓ &nbsp;Oui !</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MCQ -->
+    <div id="mode-mcq" style="display:none">
+      <div class="q-label" id="mcq-lbl">Quelle est la définition ?</div>
+      <div class="q-box"><div class="q-text" id="mcq-q"></div></div>
+      <div class="opts" id="mcq-opts"></div>
+      <div class="fb" id="mcq-fb"></div>
+      <button class="next-btn" id="mcq-next" onclick="next()">Continuer →</button>
+    </div>
+
+    <!-- Typing -->
+    <div id="mode-type" style="display:none">
+      <div class="q-label">Tapez le mot</div>
+      <div class="q-box"><div class="q-text" id="type-q" style="font-size:16px;font-weight:500;line-height:1.6"></div></div>
+      <div class="hint-line" id="type-hint"></div>
+      <input class="type-in" id="type-in" placeholder="Votre réponse…" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"/>
+      <button class="btn-primary" onclick="checkType()">Vérifier</button>
+      <div class="fb" id="type-fb"></div>
+      <button class="next-btn" id="type-next" onclick="next()">Continuer →</button>
+    </div>
+
+    <!-- Speed -->
+    <div id="mode-speed" style="display:none">
+      <div class="speed-card">
+        <div class="c-tag" style="color:var(--indigo)">mot</div>
+        <div class="speed-word" id="sp-word"></div>
+        <div class="speed-timer"><div class="speed-bar" id="sp-bar"></div></div>
+        <div style="font-size:13px;font-weight:600;color:var(--text3)" id="sp-timer-lbl">5s</div>
+      </div>
+      <div class="speed-opts" id="sp-opts"></div>
+      <div class="fb" id="sp-fb"></div>
+      <button class="next-btn" id="sp-next" onclick="next()">Suivant →</button>
+    </div>
+
+    <!-- SRS (Répétition espacée) -->
+    <div id="mode-srs" style="display:none">
+      <div class="card" style="margin-bottom:10px;padding:12px 14px;">
+        <div style="font-size:12px;font-weight:600;color:var(--text3)">Répétition espacée · <span id="srs-due">0</span> mots à revoir</div>
+      </div>
+      <div class="card-scene" id="srs-scene" onclick="flipSRS(event)">
+        <div class="card-body" id="srs-body">
+          <div class="card-side front">
+            <div class="c-tag">mot</div>
+            <div class="c-word" id="srs-word"></div>
+            <div class="c-hint">Appuyer pour révéler</div>
+          </div>
+          <div class="card-side back">
+            <div class="c-tag">définition</div>
+            <div class="c-def" id="srs-def"></div>
+          </div>
+        </div>
+      </div>
+      <div id="srs-rate" style="display:none">
+        <div class="know-q">Notez votre mémorisation</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">
+          <button onclick="rateSRS(1)" style="padding:12px 6px;border-radius:var(--r-sm);border:1.5px solid #FEB2B2;background:#FFF5F5;color:#C53030;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;">Oublié</button>
+          <button onclick="rateSRS(2)" style="padding:12px 6px;border-radius:var(--r-sm);border:1.5px solid #FBD38D;background:#FFFAF0;color:#C05621;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;">Difficile</button>
+          <button onclick="rateSRS(3)" style="padding:12px 6px;border-radius:var(--r-sm);border:1.5px solid #9AE6B4;background:#F0FFF4;color:#276749;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;">Bien</button>
+          <button onclick="rateSRS(4)" style="padding:12px 6px;border-radius:var(--r-sm);border:1.5px solid #90CDF4;background:#EBF8FF;color:#2B6CB0;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;">Parfait</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="height:70px"></div>
+  </div>
+
+  <!-- ══ GLOSSAIRE ══ -->
+  <div id="screen-gloss" class="screen">
+    <div style="display:flex;align-items:center;gap:12px;padding:12px 0 14px;">
+      <button class="back-btn" onclick="showHome()">←</button>
+      <div style="font-size:18px;font-weight:800;color:var(--text)">Glossaire complet</div>
+    </div>
+    <input class="gloss-search" id="gloss-search" placeholder="🔍  Rechercher un mot…" oninput="filterGloss(this.value)"/>
+    <div id="gloss-fiche-filter" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;"></div>
+    <div class="gloss-list" id="gloss-list"></div>
+    <div style="height:70px"></div>
+  </div>
+
+  <!-- ══ RÉSULTATS ══ -->
+  <div id="screen-res" class="screen">
+    <div class="res-hero">
+      <span class="res-emoji" id="res-emoji">🏆</span>
+      <div class="res-title" id="res-title">Excellent !</div>
+      <div class="res-sub" id="res-sub">Bravo !</div>
+    </div>
+    <div class="score-donut">
+      <svg viewBox="0 0 120 120"><circle class="donut-bg" cx="60" cy="60" r="50"/><circle class="donut-fg" id="donut" cx="60" cy="60" r="50" stroke-dasharray="314" stroke-dashoffset="314"/></svg>
+      <div class="score-inner"><div class="score-n" id="res-pct">0%</div><div class="score-l">score</div></div>
+    </div>
+    <div class="res-grid">
+      <div class="res-box"><div class="n" id="r-ok">0</div><div class="l">✓ correctes</div></div>
+      <div class="res-box"><div class="n" id="r-ko">0</div><div class="l">✗ à revoir</div></div>
+      <div class="res-box"><div class="n" id="r-tot">0</div><div class="l">vus</div></div>
+      <div class="res-box"><div class="n" id="r-t">0s</div><div class="l">⏱ durée</div></div>
+    </div>
+    <button class="btn-primary" id="btn-retry" onclick="retryWrong()" style="display:none">🔄 Reprendre les erreurs</button>
+    <button class="btn-primary" onclick="startQuiz()" style="margin-bottom:8px">↺ Rejouer</button>
+    <button class="btn-outline" onclick="showHome()">← Accueil</button>
+    <div style="height:70px"></div>
+  </div>
+
+  <!-- Bottom nav -->
+  <nav class="bnav">
+    <button class="bnav-btn active" id="nav-home" onclick="showHome()"><span class="bnav-icon">🏠</span><span class="bnav-lbl">Accueil</span></button>
+    <button class="bnav-btn" id="nav-gloss" onclick="goGlossaire()"><span class="bnav-icon">📖</span><span class="bnav-lbl">Glossaire</span></button>
+    <button class="bnav-btn" id="nav-stats" onclick="goStats()"><span class="bnav-icon">📊</span><span class="bnav-lbl">Stats</span></button>
+    <button class="bnav-btn" id="nav-import" onclick="openImport()"><span class="bnav-icon">＋</span><span class="bnav-lbl">Importer</span></button>
+  </nav>
+</div>
+
+<!-- Import sheet -->
+<div class="overlay" id="overlay-import" onclick="closeImportOut(event)">
+  <div class="sheet">
+    <div class="sheet-title">Importer des mots</div>
+    <div class="sheet-sub">Un mot par ligne, séparé de sa définition par –, , ou tabulation.</div>
+    <div class="sheet-tip">Exemple :<br>
+      Acrimonie – Mauvaise humeur exprimée par des mots aigres<br>
+      Tangible, Que l'on peut toucher, réel</div>
+    <input class="sheet-input" id="imp-name" placeholder="Nom de la fiche (ex: Mes mots)"/>
+    <textarea class="sheet-input sheet-ta" id="imp-text" placeholder="Collez vos mots ici…"></textarea>
+    <div class="sheet-row">
+      <button class="sheet-cancel" onclick="closeImport()">Annuler</button>
+      <button class="sheet-ok" onclick="confirmImport()">Importer ✓</button>
+    </div>
+  </div>
+</div>
+
+<script>
+if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
+
+/* ── PWA install ── */
+let deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();deferredPrompt=e;
+  const b=document.getElementById('install-banner'),m=document.getElementById('install-msg'),btn=document.getElementById('install-btn');
+  m.innerHTML='<strong>Installez l\'app</strong> sur votre écran d\'accueil pour l\'utiliser sans internet.';
+  btn.style.display='inline-block';b.classList.add('show');
+});
+const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
+const standalone=window.matchMedia('(display-mode:standalone)').matches||navigator.standalone;
+if(isIOS&&!standalone){const b=document.getElementById('install-banner'),m=document.getElementById('install-msg');
+  m.innerHTML='<strong>iPhone :</strong> appuyez sur le bouton Partager puis <strong>"Sur l\'écran d\'accueil"</strong> pour installer l\'app.';
+  b.classList.add('show');}
+function doInstall(){if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.then(()=>{document.getElementById('install-banner').classList.remove('show');deferredPrompt=null;});}}
+
+/* ── DATA ── */
+const BUILTIN=[
+  {f:"Fiche 1",w:"Rationnel",d:"Fondé sur la raison et la logique."},
+  {f:"Fiche 1",w:"Caustique",d:"Moqueur, mordant, voire méchant."},
+  {f:"Fiche 1",w:"Cohérent",d:"Logique, dont les parties sont bien liées entre elles."},
+  {f:"Fiche 1",w:"Efficient",d:"Qui produit un bon résultat avec un minimum d'efforts."},
+  {f:"Fiche 1",w:"Éclectique",d:"Qui s'intéresse à des domaines très variés."},
+  {f:"Fiche 1",w:"Obtus",d:"Qui manque de finesse, qui ne comprend pas vite."},
+  {f:"Fiche 1",w:"Obséquieux",d:"Poli à l'excès pour plaire (souvent hypocrite)."},
+  {f:"Fiche 1",w:"Fallacieux",d:"Destiné à tromper, même si cela semble vrai."},
+  {f:"Fiche 1",w:"Orthodoxe",d:"Conforme aux règles ou à la doctrine établie."},
+  {f:"Fiche 1",w:"Circonspect",d:"Très prudent, qui réfléchit avant d'agir."},
+  {f:"Fiche 1",w:"Collusion",d:"Entente secrète au détriment d'un tiers."},
+  {f:"Fiche 1",w:"Réfractaire",d:"Qui refuse d'obéir ou de se soumettre."},
+  {f:"Fiche 1",w:"Brainstorming",d:"Réunion de groupe pour faire émerger des idées."},
+  {f:"Fiche 1",w:"Démagogue",d:"Qui flatte le peuple pour obtenir ses faveurs."},
+  {f:"Fiche 1",w:"Vélocité",d:"Rapidité de mouvement ou d'exécution."},
+  {f:"Fiche 1",w:"Concept",d:"Une idée générale et abstraite."},
+  {f:"Fiche 1",w:"Codicille",d:"Acte ajoutant ou modifiant un testament."},
+  {f:"Fiche 1",w:"Subterfuge",d:"Moyen habile et rusé pour se tirer d'embarras."},
+  {f:"Fiche 2",w:"Sceptique",d:"Qui doute, qui ne croit pas facilement."},
+  {f:"Fiche 2",w:"Sclérose",d:"Perte de souplesse ou refus d'évoluer."},
+  {f:"Fiche 2",w:"Omniscient",d:"Qui sait absolument tout."},
+  {f:"Fiche 2",w:"Digression",d:"Action de s'écarter du sujet principal."},
+  {f:"Fiche 2",w:"Ostentation",d:"Étalage excessif de ses qualités ou de son argent."},
+  {f:"Fiche 2",w:"Circonlocution",d:"Détours de paroles pour éviter d'être direct."},
+  {f:"Fiche 2",w:"Déférent",d:"Très respectueux envers quelqu'un."},
+  {f:"Fiche 2",w:"Magnanime",d:"Généreux, qui pardonne avec noblesse."},
+  {f:"Fiche 2",w:"Sagacité",d:"Finesse d'esprit et vive intelligence."},
+  {f:"Fiche 2",w:"Spécieux",d:"Qui a une belle apparence mais qui est faux."},
+  {f:"Fiche 2",w:"Affable",d:"Aimable et accueillant."},
+  {f:"Fiche 2",w:"Statu quo",d:"État actuel des choses (qui ne bouge pas)."},
+  {f:"Fiche 2",w:"Désuet",d:"Démodé, qui n'est plus en usage."},
+  {f:"Fiche 2",w:"Exhaustif",d:"Complet, qui traite le sujet à fond."},
+  {f:"Fiche 2",w:"Déontologie",d:"Ensemble des devoirs d'une profession."},
+  {f:"Fiche 2",w:"Tangible",d:"Que l'on peut toucher, qui est bien réel."},
+  {f:"Fiche 2",w:"Facétieux",d:"Qui aime plaisanter ou faire des farces."},
+  {f:"Fiche 2",w:"Congru",d:"Exact, qui convient parfaitement."},
+  {f:"Fiche 3",w:"Décrypter",d:"Déchiffrer un message codé ou une situation."},
+  {f:"Fiche 3",w:"Scinder",d:"Diviser en deux ou plusieurs parties."},
+  {f:"Fiche 3",w:"Boycotter",d:"Cesser toute relation avec une entité pour protester."},
+  {f:"Fiche 3",w:"Extrapoler",d:"Généraliser à partir de données connues."},
+  {f:"Fiche 3",w:"Édulcorer",d:"Atténuer la dureté d'un propos."},
+  {f:"Fiche 3",w:"Galvaniser",d:"Donner une énergie soudaine et forte."},
+  {f:"Fiche 3",w:"Mystifier",d:"Tromper quelqu'un en abusant de sa crédulité."},
+  {f:"Fiche 3",w:"Aliéner",d:"Perdre un droit, un bien, ou sa liberté."},
+  {f:"Fiche 3",w:"Converger",d:"Tendre vers un même point ou but."},
+  {f:"Fiche 3",w:"Démystifier",d:"Enlever le caractère trompeur ou légendaire."},
+  {f:"Fiche 3",w:"Controverse",d:"Discussion vive, polémique sur un sujet."},
+  {f:"Fiche 3",w:"Fiduciaire",d:"Fondé sur la confiance (ex: monnaie)."},
+  {f:"Fiche 3",w:"Cartésien",d:"Méthodique, logique et rationnel."},
+  {f:"Fiche 3",w:"Erroné",d:"Qui contient une erreur, qui est faux."},
+  {f:"Fiche 3",w:"Desiderata",d:"Ce que l'on souhaite voir réalisé."},
+  {f:"Fiche 3",w:"Dialectique",d:"Art de raisonner par le dialogue."},
+  {f:"Fiche 3",w:"Usufruit",d:"Droit d'utiliser un bien sans en être propriétaire."},
+  {f:"Fiche 3",w:"Intrinsèque",d:"Qui est propre à la chose elle-même."},
+  {f:"Fiche 3",w:"Ostracisme",d:"Fait d'exclure quelqu'un d'un groupe."},
+  {f:"Fiche 3",w:"Jurisprudence",d:"Ensemble des décisions de justice sur un point."},
+  {f:"Fiche 4",w:"Succinct",d:"Très court, bref."},
+  {f:"Fiche 4",w:"Hétérogène",d:"Composé d'éléments de natures différentes."},
+  {f:"Fiche 4",w:"Colloque",d:"Réunion de spécialistes sur un sujet."},
+  {f:"Fiche 4",w:"Exécrer",d:"Haïr, détester au plus haut point."},
+  {f:"Fiche 4",w:"Rasséréner",d:"Rendre son calme à quelqu'un."},
+  {f:"Fiche 4",w:"Endémique",d:"Qui règne en permanence dans une région."},
+  {f:"Fiche 4",w:"Dubitatif",d:"Qui exprime le doute."},
+  {f:"Fiche 4",w:"Tacite",d:"Sous-entendu, non exprimé formellement."},
+  {f:"Fiche 4",w:"Récidiver",d:"Recommencer une faute ou une erreur."},
+  {f:"Fiche 4",w:"Retors",d:"Rusé, malin et un peu malhonnête."},
+  {f:"Fiche 4",w:"Vacuité",d:"État de ce qui est vide."},
+  {f:"Fiche 4",w:"Vénal",d:"Qui est prêt à se vendre pour de l'argent."},
+  {f:"Fiche 4",w:"Taylorisme",d:"Organisation scientifique du travail."},
+  {f:"Fiche 4",w:"Opprobre",d:"Honte publique jetée sur quelqu'un."},
+  {f:"Fiche 4",w:"Incurie",d:"Manque total de soin ou d'organisation."},
+  {f:"Fiche 4",w:"Débouter",d:"Rejeter une demande en justice."},
+  {f:"Fiche 4",w:"Lapidaire",d:"D'une concision extrême (souvent sec)."},
+  {f:"Fiche 4",w:"S'immiscer",d:"Se mêler des affaires d'autrui sans droit."},
+  {f:"Fiche 4",w:"Propension",d:"Tendance naturelle à faire quelque chose."},
+  {f:"Fiche 4",w:"Loquace",d:"Qui parle beaucoup."},
+  {f:"Fiche 5",w:"Mnémonique",d:"Qui aide à la mémoire."},
+  {f:"Fiche 5",w:"Inepte",d:"Absurde, qui n'a aucun sens."},
+  {f:"Fiche 5",w:"Cession",d:"Action de céder un bien ou un droit."},
+  {f:"Fiche 5",w:"Obsolescence",d:"Fait de devenir périmé ou dépassé."},
+  {f:"Fiche 5",w:"Émolument",d:"Salaire ou honoraires."},
+  {f:"Fiche 5",w:"Présomption",d:"Supposition (ou opinion trop haute de soi)."},
+  {f:"Fiche 5",w:"Caduc",d:"Qui n'est plus valable, périmé."},
+  {f:"Fiche 5",w:"Judicieux",d:"Qui a du bon sens, bien choisi."},
+  {f:"Fiche 5",w:"Corollaire",d:"Conséquence directe d'un fait."},
+  {f:"Fiche 5",w:"Lapsus",d:"Erreur où l'on dit un mot pour un autre."},
+  {f:"Fiche 5",w:"Phobie",d:"Peur obsédante et irrationnelle."},
+  {f:"Fiche 5",w:"Laconique",d:"Qui s'exprime en très peu de mots."},
+  {f:"Fiche 5",w:"Infirmer",d:"Annuler ou démentir une décision/théorie."},
+  {f:"Fiche 5",w:"Pléthore",d:"Surabondance, quantité excessive."},
+  {f:"Fiche 5",w:"Juguler",d:"Arrêter net le développement de quelque chose."},
+  {f:"Fiche 5",w:"Moratoire",d:"Délai accordé pour une obligation."},
+  {f:"Fiche 5",w:"Sine qua non",d:"Condition absolument nécessaire."},
+  {f:"Fiche 5",w:"Perspicace",d:"Qui a l'esprit fin et comprend vite."},
+  {f:"Fiche 5",w:"Pernicieux",d:"Dangereux, nuisible (souvent lentement)."},
+  {f:"Fiche 5",w:"Réitérer",d:"Faire une nouvelle fois (répéter)."},
+  {f:"Fiche 6",w:"Déprédation",d:"Dégâts, pillages ou dommages matériels."},
+  {f:"Fiche 6",w:"Injonction",d:"Ordre formel et précis d'obéir."},
+  {f:"Fiche 6",w:"Sujétion",d:"État de dépendance ou de soumission."},
+  {f:"Fiche 6",w:"Acrimonie",d:"Mauvaise humeur s'exprimant par des mots aigres."},
+  {f:"Fiche 6",w:"Aléa",d:"Événement imprévisible dû au hasard."},
+  {f:"Fiche 6",w:"Arguer",d:"Soutenir une idée par des arguments."},
+  {f:"Fiche 6",w:"Sectaire",d:"Intolérant et étroit d'esprit."},
+  {f:"Fiche 6",w:"Récuser",d:"Rejeter quelqu'un (juge, témoin)."},
+  {f:"Fiche 6",w:"Ratifier",d:"Confirmer officiellement un engagement."},
+  {f:"Fiche 6",w:"Protagoniste",d:"Personne qui joue le rôle principal."},
+  {f:"Fiche 6",w:"Avenant",d:"Document modifiant un contrat."},
+  {f:"Fiche 6",w:"Apurer",d:"Vérifier et solder un compte."},
+  {f:"Fiche 6",w:"Nonobstant",d:"Malgré."},
+  {f:"Fiche 6",w:"Inopinément",d:"De façon imprévue."},
+  {f:"Fiche 6",w:"Circonscrire",d:"Limiter l'étendue de quelque chose."},
+  {f:"Fiche 6",w:"Transgresser",d:"Désobéir à une règle ou un accord."},
+  {f:"Fiche 6",w:"Notoire",d:"Connu de tous de manière certaine."},
+  {f:"Fiche 6",w:"Prolixe",d:"Qui est trop long dans ses discours."},
+  {f:"Fiche 6",w:"Adéquation",d:"Rapport d'harmonie entre deux choses."},
+  {f:"Fiche 6",w:"Corréler",d:"Lier deux choses par un rapport logique."},
+  {f:"Fiche 7",w:"Mercantile",d:"Lié au commerce ou à l'appât du gain."},
+  {f:"Fiche 7",w:"Pécuniaire",d:"Qui a rapport à l'argent."},
+  {f:"Fiche 7",w:"Inhérent",d:"Lié de façon inséparable à quelque chose."},
+  {f:"Fiche 7",w:"Subjectif",d:"Qui dépend des goûts ou avis personnels."},
+  {f:"Fiche 7",w:"Vindicatif",d:"Qui cherche la vengeance."},
+  {f:"Fiche 7",w:"Acerbe",d:"Critique piquante, cruelle et dure."},
+  {f:"Fiche 7",w:"Ambivalent",d:"Qui comporte deux sens opposés."},
+  {f:"Fiche 7",w:"Arbitraire",d:"Décidé sans règle, par seule volonté."},
+  {f:"Fiche 7",w:"Imminent",d:"Qui va arriver très prochainement."},
+  {f:"Fiche 7",w:"Voire",d:"Et même (renforcement)."},
+  {f:"Fiche 7",w:"Ultérieur",d:"Qui se produira après l'événement présent."},
+  {f:"Fiche 7",w:"Réceptivité",d:"Capacité à recevoir des idées ou impressions."},
+  {f:"Fiche 7",w:"Abrogation",d:"Annulation d'une loi."},
+  {f:"Fiche 7",w:"Anachronisme",d:"Erreur de date ou d'époque."},
+  {f:"Fiche 7",w:"Assertion",d:"Affirmation tenue pour vraie."},
+  {f:"Fiche 7",w:"Sporadique",d:"Qui apparaît de temps en temps."},
+  {f:"Fiche 7",w:"Obtempérer",d:"Obéir à un ordre sans discuter."},
+];
+const FICHE_EMOJIS={
+  "Fiche 1":"💡","Fiche 2":"🤝","Fiche 3":"⚙️","Fiche 4":"🔍",
+  "Fiche 5":"📋","Fiche 6":"🏛️","Fiche 7":"⚖️",
+  "Toutes les fiches":"📚"
+};
+const FICHE_COLORS=["#5865F2","#E53E3E","#2DC653","#F6820D","#805AD5","#0BC5EA","#D69E2E","#ED64A6"];
+
+/* ── STATE ── */
+let ls=k=>localStorage.getItem(k);
+let lss=(k,v)=>localStorage.setItem(k,v);
+let learned=JSON.parse(ls('vp_learned')||'{}');
+let srsData=JSON.parse(ls('vp_srs')||'{}');
+let sessions=+ls('vp_sessions')||0;
+let streak=+ls('vp_streak')||0;
+let lastDay=ls('vp_lastday')||'';
+let todayCount=+ls('vp_today')||0;
+let customFiches=JSON.parse(ls('vp_custom')||'[]');
+let selectedFiche=null,currentMode='flashcard';
+let quiz=[],qIdx=0,ok=0,ko=0,wrongCards=[],lives=5,t0=0,flipped=false;
+let spTimer=null,srsFlipped=false,srsQueue=[];
+
+/* ── HELPERS ── */
+function sh(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function norm(s){return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9 ']/g,'').trim();}
+function today(){return new Date().toISOString().slice(0,10);}
+function save(){lss('vp_learned',JSON.stringify(learned));lss('vp_srs',JSON.stringify(srsData));
+  lss('vp_sessions',sessions);lss('vp_streak',streak);lss('vp_lastday',lastDay);
+  lss('vp_today',todayCount);lss('vp_custom',JSON.stringify(customFiches));}
+
+function allCards(){return[...BUILTIN,...customFiches.flatMap(cf=>cf.cards)];}
+function getCards(name){
+  if(name==='Toutes les fiches')return allCards();
+  const c=customFiches.find(cf=>cf.name===name);
+  return c?c.cards:BUILTIN.filter(b=>b.f===name);
+}
+function ficheNames(){
+  const bn=[...new Set(BUILTIN.map(b=>b.f)),'Toutes les fiches'];
+  return[...bn,...customFiches.map(cf=>cf.name)];
+}
+
+/* ── NAV ── */
+function setNav(id){document.querySelectorAll('.bnav-btn').forEach(b=>b.classList.remove('active'));const el=document.getElementById(id);if(el)el.classList.add('active');}
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+
+function showHome(){clearInterval(spTimer);showScreen('screen-home');setNav('nav-home');buildHome();}
+function goGlossaire(){showScreen('screen-gloss');setNav('nav-gloss');buildGloss();}
+function goStats(){/* inline dans home pour l'instant */showHome();}
+
+/* ── BUILD HOME ── */
+function buildHome(){
+  const td=today();
+  if(lastDay!==td){todayCount=0;lss('vp_today',0);}
+  document.getElementById('sn-total').textContent=Object.keys(learned).length;
+  document.getElementById('sn-today').textContent=todayCount;
+  document.getElementById('sn-sessions').textContent=sessions;
+  document.getElementById('streak-n').textContent=streak;
+
+  const list=document.getElementById('fiche-list');list.innerHTML='';
+  ficheNames().forEach((name,i)=>{
+    const cards=getCards(name);
+    const lc=cards.filter(c=>learned[c.w]).length;
+    const pct=Math.round(lc/cards.length*100)||0;
+    const isCustom=customFiches.some(cf=>cf.name===name);
+    const color=FICHE_COLORS[i%FICHE_COLORS.length];
+    const emoji=FICHE_EMOJIS[name]||'📝';
+    const div=document.createElement('div');
+    div.className='fiche-item'+(selectedFiche===name?' selected':'');
+    div.innerHTML=`
+      <div class="fiche-dot" style="background:${color}20;color:${color}">${emoji}</div>
+      <div class="fiche-info">
+        <div class="fiche-name">${name}${isCustom?`<span style="font-size:10px;background:var(--indigo-light);color:var(--indigo);border-radius:4px;padding:1px 5px;margin-left:5px;font-weight:600">perso</span>`:''}</div>
+        <div class="fiche-meta">${cards.length} mots · ${lc} maîtrisés</div>
+      </div>
+      <div class="fiche-prog">
+        ${isCustom?`<button class="del-btn" onclick="delFiche('${name}',event)">✕</button>`:''}
+        <div class="mini-track"><div class="mini-fill" style="width:${pct}%;background:${color}"></div></div>
+        <div class="mini-pct">${pct}%</div>
+      </div>`;
+    div.onclick=()=>selFiche(name);
+    list.appendChild(div);
+  });
+}
+
+function delFiche(name,e){
+  e.stopPropagation();
+  if(!confirm('Supprimer la fiche "'+name+'" ?'))return;
+  customFiches=customFiches.filter(cf=>cf.name!==name);
+  if(selectedFiche===name){selectedFiche=null;document.getElementById('btn-start').disabled=true;document.getElementById('btn-start').textContent='Choisir une fiche';}
+  save();buildHome();
+}
+
+function selFiche(name){
+  selectedFiche=name;
+  const btn=document.getElementById('btn-start');
+  btn.disabled=false;btn.textContent='Commencer →';
+  buildHome();
+}
+
+function selMode(mode,el){
+  currentMode=mode;
+  document.querySelectorAll('.mode-card').forEach(m=>m.classList.remove('sel'));
+  el.classList.add('sel');
+  if(mode==='srs'){document.getElementById('btn-start').textContent='Révision SRS →';return;}
+  document.getElementById('btn-start').textContent=selectedFiche?'Commencer →':'Choisir une fiche';
+}
+
+/* ── QUIZ START ── */
+function startQuiz(cards){
+  if(!selectedFiche&&!cards)return;
+  clearInterval(spTimer);
+  const src=cards||getCards(selectedFiche);
+  if(currentMode==='srs'){startSRS(src);return;}
+  quiz=sh(src);qIdx=0;ok=0;ko=0;wrongCards=[];
+  lives=currentMode==='mcq'?5:999;t0=Date.now();flipped=false;
+  showScreen('screen-quiz');setNav('');
+  ['mode-fc','mode-mcq','mode-type','mode-speed','mode-srs'].forEach(id=>document.getElementById(id).style.display='none');
+  const modeMap={flashcard:'mode-fc',mcq:'mode-mcq',type:'mode-type',speed:'mode-speed'};
+  document.getElementById(modeMap[currentMode]||'mode-fc').style.display='block';
+  updProg();updHearts();loadQ();
+}
+
+function retryWrong(){if(wrongCards.length)startQuiz(wrongCards);}
+
+function updProg(){
+  const p=quiz.length?Math.round(qIdx/quiz.length*100):0;
+  document.getElementById('q-bar').style.width=p+'%';
+  document.getElementById('q-lbl').textContent=qIdx+' / '+quiz.length;
+}
+function updHearts(){
+  const el=document.getElementById('q-hearts');
+  if(currentMode!=='mcq'){el.innerHTML='';return;}
+  el.innerHTML=Array.from({length:5},(_,i)=>`<span>${i<lives?'❤️':'🖤'}</span>`).join('');
+}
+function loadQ(){
+  if(qIdx>=quiz.length){endQuiz();return;}
+  const c=quiz[qIdx];
+  if(currentMode==='flashcard')loadFC(c);
+  else if(currentMode==='mcq')loadMCQ(c);
+  else if(currentMode==='type')loadType(c);
+  else if(currentMode==='speed')loadSpeed(c);
+  updProg();
+}
+function next(){qIdx++;loadQ();}
+
+/* ── FLASHCARD ── */
+function loadFC(c){
+  document.getElementById('fc-word').textContent=c.w;
+  document.getElementById('fc-def').textContent=c.d;
+  const b=document.getElementById('card-body');
+  b.style.transition='none';b.classList.remove('flipped');
+  setTimeout(()=>b.style.transition='',20);
+  flipped=false;document.getElementById('know-zone').style.display='none';
+}
+function flipCard(e){
+  if(flipped)return;flipped=true;
+  document.getElementById('card-body').classList.add('flipped');
+  setTimeout(()=>{const z=document.getElementById('know-zone');z.style.display='block';z.style.animation='su .2s ease';},280);
+}
+function fcAns(knew){
+  const c=quiz[qIdx];
+  if(knew){ok++;learned[c.w]=true;}else{ko++;wrongCards.push(c);delete learned[c.w];}
+  todayCount++;qIdx++;loadQ();
+}
+
+/* ── MCQ ── */
+function loadMCQ(c){
+  const askDef=Math.random()>.5;
+  document.getElementById('mcq-lbl').textContent=askDef?'Quelle est la définition ?':'Quel est le mot ?';
+  document.getElementById('mcq-q').textContent=askDef?c.w:c.d;
+  const pool=sh(allCards().filter(x=>x.w!==c.w)).slice(0,3);
+  const opts=sh([c,...pool]);
+  const container=document.getElementById('mcq-opts');container.innerHTML='';
+  opts.forEach(opt=>{
+    const btn=document.createElement('button');btn.className='opt';
+    btn.textContent=askDef?opt.d:opt.w;
+    btn.onclick=()=>checkMCQ(btn,opt.w===c.w,c);
+    container.appendChild(btn);
+  });
+  document.getElementById('mcq-fb').className='fb';
+  document.getElementById('mcq-next').classList.remove('show');
+}
+function checkMCQ(btn,isOk,c){
+  document.querySelectorAll('.opt').forEach(b=>b.disabled=true);
+  const fb=document.getElementById('mcq-fb');
+  if(isOk){btn.classList.add('right');ok++;learned[c.w]=true;todayCount++;fb.textContent='✓ Correct !';fb.className='fb ok';}
+  else{
+    btn.classList.add('wrong');ko++;wrongCards.push(c);delete learned[c.w];lives--;
+    document.querySelectorAll('.opt').forEach(b=>{if(b.textContent===c.d||b.textContent===c.w)b.classList.add('right');});
+    fb.textContent='✗ '+c.w+' : '+c.d;fb.className='fb ko';
+    updHearts();if(lives<=0){setTimeout(endQuiz,1400);return;}
+  }
+  document.getElementById('mcq-next').classList.add('show');
+}
+
+/* ── TYPING ── */
+function loadType(c){
+  document.getElementById('type-q').textContent=c.d;
+  const inp=document.getElementById('type-in');
+  inp.value='';inp.className='type-in';inp.disabled=false;
+  inp.placeholder='Votre réponse… ('+c.w.length+' lettres)';
+  document.getElementById('type-hint').textContent='';
+  document.getElementById('type-fb').className='fb';
+  document.getElementById('type-next').classList.remove('show');
+  setTimeout(()=>inp.focus(),80);
+  inp.onkeydown=e=>{if(e.key==='Enter'&&!inp.disabled)checkType();};
+}
+function checkType(){
+  const c=quiz[qIdx];const inp=document.getElementById('type-in');
+  const v=inp.value.trim();if(!v)return;
+  const isOk=norm(v)===norm(c.w);inp.disabled=true;
+  const fb=document.getElementById('type-fb');
+  if(isOk){inp.classList.add('right');ok++;learned[c.w]=true;todayCount++;fb.textContent='✓ Parfait !';fb.className='fb ok';}
+  else{inp.classList.add('wrong');ko++;wrongCards.push(c);delete learned[c.w];fb.textContent='✗ Réponse : '+c.w;fb.className='fb ko';}
+  document.getElementById('type-next').classList.add('show');
+}
+
+/* ── SPEED MODE ── */
+let spSec=5,spInterval=null;
+function loadSpeed(c){
+  document.getElementById('sp-word').textContent=c.w;
+  document.getElementById('sp-fb').className='fb';
+  document.getElementById('sp-next').classList.remove('show');
+  const pool=sh(allCards().filter(x=>x.w!==c.w)).slice(0,3);
+  const opts=sh([c,...pool]);
+  const container=document.getElementById('sp-opts');container.innerHTML='';
+  opts.forEach(opt=>{
+    const btn=document.createElement('button');btn.className='speed-opt';
+    btn.textContent=opt.d;
+    btn.onclick=()=>checkSpeed(btn,opt.w===c.w,c);
+    container.appendChild(btn);
+  });
+  spSec=5;document.getElementById('sp-timer-lbl').textContent='5s';
+  document.getElementById('sp-bar').style.width='100%';
+  clearInterval(spInterval);
+  spInterval=setInterval(()=>{
+    spSec-=.1;const p=Math.max(0,spSec/5*100);
+    document.getElementById('sp-bar').style.width=p+'%';
+    document.getElementById('sp-timer-lbl').textContent=Math.max(0,Math.ceil(spSec))+'s';
+    if(spSec<=0){clearInterval(spInterval);timeoutSpeed(c);}
+  },100);
+}
+function checkSpeed(btn,isOk,c){
+  clearInterval(spInterval);
+  document.querySelectorAll('.speed-opt').forEach(b=>b.disabled=true);
+  if(isOk){btn.classList.add('right');ok++;learned[c.w]=true;todayCount++;}
+  else{btn.classList.add('wrong');ko++;wrongCards.push(c);delete learned[c.w];
+    document.querySelectorAll('.speed-opt').forEach(b=>{if(b.textContent===c.d)b.classList.add('right');});}
+  document.getElementById('sp-next').classList.add('show');
+}
+function timeoutSpeed(c){
+  ko++;wrongCards.push(c);delete learned[c.w];
+  document.getElementById('sp-fb').textContent='⏱ Temps écoulé ! '+c.w+' = '+c.d;
+  document.getElementById('sp-fb').className='fb ko';
+  document.getElementById('sp-next').classList.add('show');
+}
+
+/* ── SRS ── */
+function startSRS(src){
+  const now=Date.now();
+  srsQueue=src.filter(c=>{
+    const d=srsData[c.w];
+    return!d||d.nextReview<=now;
+  });
+  if(!srsQueue.length){alert('Bravo ! Aucun mot à réviser maintenant. Revenez plus tard.');return;}
+  srsQueue=sh(srsQueue);qIdx=0;ok=0;ko=0;srsFlipped=false;t0=Date.now();
+  showScreen('screen-quiz');setNav('');
+  ['mode-fc','mode-mcq','mode-type','mode-speed'].forEach(id=>document.getElementById(id).style.display='none');
+  document.getElementById('mode-srs').style.display='block';
+  document.getElementById('srs-due').textContent=srsQueue.length;
+  loadSRS();
+}
+function loadSRS(){
+  if(qIdx>=srsQueue.length){endSRS();return;}
+  const c=srsQueue[qIdx];
+  document.getElementById('srs-word').textContent=c.w;
+  document.getElementById('srs-def').textContent=c.d;
+  const b=document.getElementById('srs-body');
+  b.style.transition='none';b.classList.remove('flipped');
+  setTimeout(()=>b.style.transition='',20);
+  srsFlipped=false;document.getElementById('srs-rate').style.display='none';
+}
+function flipSRS(e){
+  if(srsFlipped)return;srsFlipped=true;
+  document.getElementById('srs-body').classList.add('flipped');
+  setTimeout(()=>{const r=document.getElementById('srs-rate');r.style.display='block';r.style.animation='su .2s ease';},280);
+}
+function rateSRS(score){
+  const c=srsQueue[qIdx];
+  const d=srsData[c.w]||{interval:1,ef:2.5,reps:0};
+  if(score<3){d.reps=0;d.interval=1;}
+  else{
+    if(d.reps===0)d.interval=1;
+    else if(d.reps===1)d.interval=6;
+    else d.interval=Math.round(d.interval*d.ef);
+    d.ef=Math.max(1.3,d.ef+(0.1-(5-score)*(0.08+(5-score)*0.02)));
+    d.reps++;
+  }
+  d.nextReview=Date.now()+d.interval*86400000;
+  srsData[c.w]=d;
+  if(score>=3){ok++;learned[c.w]=true;}else{ko++;delete learned[c.w];}
+  todayCount++;qIdx++;loadSRS();
+}
+function endSRS(){
+  sessions++;save();
+  const pct=ok+ko?Math.round(ok/(ok+ko)*100):0;
+  showResults(pct,ok,ko,ok+ko);
+}
+
+/* ── END QUIZ ── */
+function endQuiz(){
+  clearInterval(spInterval);
+  const td=today();
+  if(lastDay!==td){streak=(lastDay===new Date(Date.now()-86400000).toISOString().slice(0,10))?streak+1:1;lastDay=td;}
+  sessions++;save();
+  const pct=ok+ko?Math.round(ok/(ok+ko)*100):0;
+  showResults(pct,ok,ko,ok+ko);
+}
+function showResults(pct,nok,nko,tot){
+  const el=t=>{document.getElementById(t[0]).textContent=t[1];};
+  const elapsed=Math.round((Date.now()-t0)/1000);
+  const emoji=pct>=90?'🏆':pct>=70?'🎉':pct>=50?'💪':'📚';
+  const title=pct>=90?'Excellent !':pct>=70?'Très bien !':pct>=50?'Pas mal !':'Continuez !';
+  const sub=`${nok} bonnes réponses sur ${tot}`;
+  document.getElementById('res-emoji').textContent=emoji;
+  document.getElementById('res-title').textContent=title;
+  document.getElementById('res-sub').textContent=sub;
+  document.getElementById('res-pct').textContent=pct+'%';
+  [['r-ok',nok],['r-ko',nko],['r-tot',tot],['r-t',elapsed+'s']].forEach(el);
+  document.getElementById('btn-retry').style.display=wrongCards.length?'block':'none';
+  showScreen('screen-res');setNav('');
+  setTimeout(()=>{
+    const offset=314-(314*pct/100);
+    document.getElementById('donut').style.strokeDashoffset=offset;
+  },100);
+}
+
+/* ── GLOSSAIRE ── */
+let glossFilter='';let glossFiche='';
+function buildGloss(){
+  const all=allCards();
+  const fiches=[...new Set(all.map(c=>c.f))];
+  const ff=document.getElementById('gloss-fiche-filter');ff.innerHTML='';
+  const makeChip=(name,isAll)=>{
+    const chip=document.createElement('div');
+    chip.style.cssText=`padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;border:1.5px solid ${(isAll?!glossFiche:glossFiche===name)?'var(--indigo)':'var(--border)'};background:${(isAll?!glossFiche:glossFiche===name)?'var(--indigo-light)':'var(--white)'};color:${(isAll?!glossFiche:glossFiche===name)?'var(--indigo)':'var(--text2)'}`;
+    chip.textContent=isAll?'Tout':name;
+    chip.onclick=()=>{glossFiche=isAll?'':name;buildGloss();};
+    ff.appendChild(chip);
+  };
+  makeChip('',true);
+  fiches.forEach(f=>makeChip(f,false));
+  filterGloss(document.getElementById('gloss-search').value);
+}
+function filterGloss(q){
+  glossFilter=q.toLowerCase();
+  const all=allCards();
+  const list=document.getElementById('gloss-list');list.innerHTML='';
+  all.filter(c=>{
+    if(glossFiche&&c.f!==glossFiche)return false;
+    return!glossFilter||c.w.toLowerCase().includes(glossFilter)||c.d.toLowerCase().includes(glossFilter);
+  }).sort((a,b)=>a.w.localeCompare(b.w)).forEach(c=>{
+    const div=document.createElement('div');div.className='gloss-item';
+    const isLearned=learned[c.w];
+    div.innerHTML=`<div style="display:flex;align-items:center"><div class="gloss-w">${c.w}</div><span class="gloss-tag">${c.f}</span>${isLearned?'<span style="margin-left:auto;font-size:12px;color:var(--green)">✓</span>':''}</div><div class="gloss-d">${c.d}</div>`;
+    div.onclick=()=>div.classList.toggle('open');
+    list.appendChild(div);
+  });
+  if(!list.children.length)list.innerHTML='<div style="padding:20px;text-align:center;color:var(--text3);font-size:14px">Aucun résultat</div>';
+}
+
+/* ── IMPORT ── */
+function openImport(){document.getElementById('overlay-import').classList.add('open');document.getElementById('imp-name').focus();}
+function closeImport(){document.getElementById('overlay-import').classList.remove('open');}
+function closeImportOut(e){if(e.target===document.getElementById('overlay-import'))closeImport();}
+function confirmImport(){
+  const raw=document.getElementById('imp-text').value.trim();
+  const name=(document.getElementById('imp-name').value.trim()||'Ma fiche '+(customFiches.length+1));
+  if(!raw){alert('Aucun contenu !');return;}
+  const lines=raw.split('\n').filter(l=>l.trim());
+  const cards=[];
+  lines.forEach(line=>{
+    const m=line.match(/^(.+?)\s*[–—\-,\t:]\s*(.+)$/);
+    if(m)cards.push({f:name,w:m[1].trim(),d:m[2].trim()});
+  });
+  if(!cards.length){alert('Format non reconnu. Essayez : Mot – Définition');return;}
+  const idx=customFiches.findIndex(cf=>cf.name===name);
+  if(idx>=0)customFiches[idx]={name,cards};else customFiches.push({name,cards});
+  save();closeImport();
+  document.getElementById('imp-text').value='';document.getElementById('imp-name').value='';
+  selectedFiche=name;
+  document.getElementById('btn-start').disabled=false;
+  document.getElementById('btn-start').textContent='Commencer →';
+  buildHome();
+}
+
+buildHome();
+</script>
+</body>
+</html>
